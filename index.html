@@ -1,0 +1,1150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>IPMS — Intelligent Patient Monitoring System</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    /* ── Reset & Base ── */
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --blue-deep:   #0f2d5c;
+      --blue-mid:    #1a56a0;
+      --blue-light:  #e8f0fb;
+      --green:       #16a34a;
+      --green-light: #dcfce7;
+      --red:         #dc2626;
+      --red-light:   #fee2e2;
+      --amber:       #d97706;
+      --amber-light: #fef3c7;
+      --grey-bg:     #f3f6fb;
+      --grey-border: #dde3ee;
+      --text-main:   #0f172a;
+      --text-muted:  #64748b;
+      --white:       #ffffff;
+      --card-shadow: 0 2px 12px rgba(15,45,92,0.09);
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--grey-bg);
+      color: var(--text-main);
+      min-height: 100vh;
+    }
+
+    /* ══════════════════════════════════════
+       LOGIN PAGE
+    ══════════════════════════════════════ */
+    #login-page {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(145deg, #0f2d5c 0%, #1a56a0 60%, #2563eb 100%);
+      padding: 1rem;
+    }
+
+    .login-wrap {
+      width: 100%;
+      max-width: 420px;
+    }
+
+    .login-logo {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .login-logo .pulse-icon {
+      width: 64px; height: 64px;
+      background: rgba(255,255,255,0.15);
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .login-logo h1 {
+      color: #fff;
+      font-size: 1.6rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .login-logo p {
+      color: rgba(255,255,255,0.65);
+      font-size: 0.85rem;
+      margin-top: 0.25rem;
+    }
+
+    .login-card {
+      background: var(--white);
+      border-radius: 16px;
+      padding: 2rem;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.25);
+    }
+
+    .login-card h2 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--text-main);
+      margin-bottom: 1.5rem;
+    }
+
+    .form-group {
+      margin-bottom: 1rem;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 0.35rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 0.7rem 0.9rem;
+      border: 1.5px solid var(--grey-border);
+      border-radius: 8px;
+      font-size: 0.95rem;
+      color: var(--text-main);
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .form-group input:focus {
+      border-color: var(--blue-mid);
+    }
+
+    .login-hint {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-bottom: 1.25rem;
+      background: var(--blue-light);
+      border-radius: 6px;
+      padding: 0.5rem 0.75rem;
+    }
+
+    .btn-primary {
+      width: 100%;
+      padding: 0.8rem;
+      background: var(--blue-mid);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .btn-primary:hover { background: var(--blue-deep); }
+
+    .login-error {
+      color: var(--red);
+      font-size: 0.82rem;
+      margin-top: 0.5rem;
+      display: none;
+    }
+
+    /* ══════════════════════════════════════
+       DASHBOARD
+    ══════════════════════════════════════ */
+    #dashboard-page { display: none; }
+
+    /* ── Topbar ── */
+    .topbar {
+      background: var(--blue-deep);
+      color: #fff;
+      padding: 0 1.5rem;
+      height: 58px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+    }
+
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .topbar-left .icon { font-size: 1.3rem; }
+
+    .topbar-left h1 {
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+
+    .topbar-left span {
+      font-size: 0.72rem;
+      opacity: 0.6;
+      display: none;
+    }
+
+    @media(min-width:600px) { .topbar-left span { display: inline; } }
+
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .clock {
+      font-size: 0.82rem;
+      opacity: 0.75;
+      font-variant-numeric: tabular-nums;
+    }
+
+    #alert-count-badge {
+      background: var(--red);
+      color: #fff;
+      font-size: 0.72rem;
+      font-weight: 700;
+      border-radius: 99px;
+      padding: 0.1rem 0.5rem;
+      display: none;
+    }
+
+    .btn-logout {
+      background: rgba(255,255,255,0.12);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 0.35rem 0.8rem;
+      font-size: 0.8rem;
+      cursor: pointer;
+    }
+
+    .btn-logout:hover { background: rgba(255,255,255,0.22); }
+
+    /* ── Alert banner ── */
+    #alert-banner {
+      display: none;
+      background: var(--red);
+      color: #fff;
+      text-align: center;
+      padding: 0.55rem 1rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      animation: flashBanner 1.2s infinite alternate;
+    }
+
+    @keyframes flashBanner {
+      from { opacity: 1; }
+      to   { opacity: 0.75; }
+    }
+
+    /* ── Main layout ── */
+    .main {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 1.25rem 1rem 3rem;
+    }
+
+    .section-title {
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      margin-bottom: 0.75rem;
+      margin-top: 1.5rem;
+    }
+
+    /* ── Stats row ── */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.75rem;
+      margin-bottom: 0.5rem;
+    }
+
+    @media(min-width:700px) {
+      .stats-row { grid-template-columns: repeat(4, 1fr); }
+    }
+
+    .stat-card {
+      background: var(--white);
+      border-radius: 12px;
+      padding: 1rem;
+      box-shadow: var(--card-shadow);
+      border-left: 4px solid transparent;
+    }
+
+    .stat-card.blue   { border-color: var(--blue-mid); }
+    .stat-card.green  { border-color: var(--green); }
+    .stat-card.red    { border-color: var(--red); }
+    .stat-card.amber  { border-color: var(--amber); }
+
+    .stat-card .label {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .stat-card .value {
+      font-size: 1.8rem;
+      font-weight: 800;
+      line-height: 1.1;
+      margin-top: 0.25rem;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .stat-card.blue  .value { color: var(--blue-mid); }
+    .stat-card.green .value { color: var(--green); }
+    .stat-card.red   .value { color: var(--red); }
+    .stat-card.amber .value { color: var(--amber); }
+
+    /* ── Patient grid ── */
+    .patient-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0.85rem;
+    }
+
+    @media(min-width:600px)  { .patient-grid { grid-template-columns: repeat(2,1fr); } }
+    @media(min-width:960px)  { .patient-grid { grid-template-columns: repeat(3,1fr); } }
+
+    .patient-card {
+      background: var(--white);
+      border-radius: 12px;
+      padding: 1rem 1.1rem;
+      box-shadow: var(--card-shadow);
+      border: 1.5px solid var(--grey-border);
+      transition: transform 0.15s;
+      cursor: pointer;
+    }
+
+    .patient-card:hover { transform: translateY(-2px); }
+
+    .patient-card.abnormal {
+      border-color: var(--red);
+      animation: pulseCard 1.6s infinite;
+    }
+
+    @keyframes pulseCard {
+      0%,100% { box-shadow: 0 0 0 0 rgba(220,38,38,0.18); }
+      50%      { box-shadow: 0 0 0 8px rgba(220,38,38,0); }
+    }
+
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 0.75rem;
+    }
+
+    .patient-name {
+      font-weight: 700;
+      font-size: 0.95rem;
+    }
+
+    .patient-meta {
+      font-size: 0.73rem;
+      color: var(--text-muted);
+      margin-top: 0.1rem;
+    }
+
+    .status-pill {
+      font-size: 0.7rem;
+      font-weight: 700;
+      border-radius: 99px;
+      padding: 0.2rem 0.65rem;
+      white-space: nowrap;
+    }
+
+    .status-pill.normal   { background: var(--green-light); color: var(--green); }
+    .status-pill.abnormal { background: var(--red-light);   color: var(--red); }
+
+    .vitals-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.5rem;
+    }
+
+    .vital-box {
+      background: var(--grey-bg);
+      border-radius: 8px;
+      padding: 0.45rem 0.6rem;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .vital-box .vname {
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .vital-box .vval {
+      font-size: 1rem;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      margin-top: 0.1rem;
+    }
+
+    .vital-box .vval.ok  { color: var(--green); }
+    .vital-box .vval.bad { color: var(--red); }
+
+    .card-time {
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      margin-top: 0.65rem;
+      text-align: right;
+    }
+
+    /* ── Charts ── */
+    .chart-select-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .chart-select-row label {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    .chart-select-row select {
+      padding: 0.4rem 0.75rem;
+      border: 1.5px solid var(--grey-border);
+      border-radius: 7px;
+      font-size: 0.85rem;
+      background: var(--white);
+      color: var(--text-main);
+      outline: none;
+    }
+
+    .charts-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0.85rem;
+    }
+
+    @media(min-width:700px) {
+      .charts-grid { grid-template-columns: repeat(2,1fr); }
+    }
+
+    .chart-card {
+      background: var(--white);
+      border-radius: 12px;
+      padding: 1rem;
+      box-shadow: var(--card-shadow);
+    }
+
+    .chart-card h3 {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.6rem;
+    }
+
+    /* ── Alerts ── */
+    .alerts-list { display: flex; flex-direction: column; gap: 0.6rem; }
+
+    .alert-item {
+      background: var(--white);
+      border-radius: 10px;
+      padding: 0.85rem 1rem;
+      box-shadow: var(--card-shadow);
+      border-left: 4px solid var(--red);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .alert-item.acknowledged {
+      border-color: var(--grey-border);
+      opacity: 0.65;
+    }
+
+    .alert-info .alert-patient {
+      font-weight: 700;
+      font-size: 0.9rem;
+    }
+
+    .alert-info .alert-detail {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-top: 0.15rem;
+    }
+
+    .btn-ack {
+      background: var(--blue-light);
+      color: var(--blue-mid);
+      border: none;
+      border-radius: 6px;
+      padding: 0.35rem 0.85rem;
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .btn-ack:hover { background: #d0e3f7; }
+
+    .ack-label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      font-style: italic;
+    }
+
+    .no-alerts {
+      background: var(--white);
+      border-radius: 10px;
+      padding: 1.5rem;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.88rem;
+      box-shadow: var(--card-shadow);
+    }
+
+    /* ── Modal ── */
+    .modal-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.45);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+
+    .modal-overlay.open { display: flex; }
+
+    .modal {
+      background: var(--white);
+      border-radius: 16px;
+      padding: 1.5rem;
+      width: 100%;
+      max-width: 480px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .modal-header h2 { font-size: 1.05rem; }
+
+    .btn-close {
+      background: none;
+      border: none;
+      font-size: 1.2rem;
+      cursor: pointer;
+      color: var(--text-muted);
+    }
+
+    .modal-vitals {
+      display: grid;
+      grid-template-columns: repeat(2,1fr);
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+
+    .modal-vital-box {
+      background: var(--grey-bg);
+      border-radius: 10px;
+      padding: 0.75rem;
+      text-align: center;
+    }
+
+    .modal-vital-box .mvname {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .modal-vital-box .mvval {
+      font-size: 1.4rem;
+      font-weight: 800;
+      margin-top: 0.2rem;
+    }
+
+    .modal-vital-box .mvval.ok  { color: var(--green); }
+    .modal-vital-box .mvval.bad { color: var(--red); }
+
+    .modal-status {
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+
+    .modal-status.normal   { background: var(--green-light); color: var(--green); }
+    .modal-status.abnormal { background: var(--red-light);   color: var(--red); }
+
+    /* ── Tabs ── */
+    .tab-bar {
+      display: flex;
+      gap: 0.25rem;
+      background: var(--white);
+      border-radius: 10px;
+      padding: 0.3rem;
+      box-shadow: var(--card-shadow);
+      margin-bottom: 1rem;
+      overflow-x: auto;
+    }
+
+    .tab-btn {
+      flex: 1;
+      min-width: max-content;
+      background: none;
+      border: none;
+      border-radius: 7px;
+      padding: 0.5rem 0.9rem;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.18s;
+      white-space: nowrap;
+    }
+
+    .tab-btn.active {
+      background: var(--blue-deep);
+      color: #fff;
+    }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════
+     LOGIN PAGE
+══════════════════════════════════════ -->
+<div id="login-page">
+  <div class="login-wrap">
+    <div class="login-logo">
+      <div class="pulse-icon">🫀</div>
+      <h1>IPMS</h1>
+      <p>Intelligent Patient Monitoring System</p>
+    </div>
+    <div class="login-card">
+      <h2>Sign in to your account</h2>
+      <div class="login-hint">
+        Demo credentials — Username: <strong>admin</strong> &nbsp;|&nbsp; Password: <strong>ipms2024</strong>
+      </div>
+      <div class="form-group">
+        <label>Username</label>
+        <input type="text" id="login-user" placeholder="Enter username" autocomplete="username"/>
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="login-pass" placeholder="Enter password" autocomplete="current-password"/>
+      </div>
+      <div class="login-error" id="login-error">Invalid username or password.</div>
+      <button class="btn-primary" onclick="doLogin()">Sign In</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     DASHBOARD
+══════════════════════════════════════ -->
+<div id="dashboard-page">
+
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <span class="icon">🫀</span>
+      <h1>IPMS</h1>
+      <span>Intelligent Patient Monitoring System</span>
+    </div>
+    <div class="topbar-right">
+      <span class="clock" id="clock"></span>
+      <span id="alert-count-badge">0 Alerts</span>
+      <button class="btn-logout" onclick="doLogout()">Logout</button>
+    </div>
+  </div>
+
+  <!-- Alert Banner -->
+  <div id="alert-banner">⚠ CRITICAL ALERT — Abnormal vitals detected. Check patient list immediately.</div>
+
+  <!-- Main -->
+  <div class="main">
+
+    <!-- Tabs -->
+    <div class="tab-bar">
+      <button class="tab-btn active" onclick="switchTab('overview')">Overview</button>
+      <button class="tab-btn" onclick="switchTab('monitoring')">Live Charts</button>
+      <button class="tab-btn" onclick="switchTab('alerts')">Alert Log</button>
+    </div>
+
+    <!-- ── TAB: Overview ── -->
+    <div class="tab-content active" id="tab-overview">
+
+      <div class="stats-row">
+        <div class="stat-card blue">
+          <div class="label">Total Patients</div>
+          <div class="value" id="stat-total">6</div>
+        </div>
+        <div class="stat-card green">
+          <div class="label">Normal</div>
+          <div class="value" id="stat-normal">—</div>
+        </div>
+        <div class="stat-card red">
+          <div class="label">Abnormal</div>
+          <div class="value" id="stat-abnormal">—</div>
+        </div>
+        <div class="stat-card amber">
+          <div class="label">Active Alerts</div>
+          <div class="value" id="stat-alerts">—</div>
+        </div>
+      </div>
+
+      <div class="section-title">Patient Status</div>
+      <div class="patient-grid" id="patient-grid"></div>
+    </div>
+
+    <!-- ── TAB: Live Charts ── -->
+    <div class="tab-content" id="tab-monitoring">
+      <div class="chart-select-row">
+        <label>Patient:</label>
+        <select id="chart-patient-select" onchange="renderCharts()"></select>
+      </div>
+      <div class="charts-grid">
+        <div class="chart-card">
+          <h3>Heart Rate (bpm)</h3>
+          <canvas id="chart-hr"></canvas>
+        </div>
+        <div class="chart-card">
+          <h3>Temperature (°C)</h3>
+          <canvas id="chart-temp"></canvas>
+        </div>
+        <div class="chart-card">
+          <h3>Blood Pressure (mmHg)</h3>
+          <canvas id="chart-bp"></canvas>
+        </div>
+        <div class="chart-card">
+          <h3>SpO2 (%)</h3>
+          <canvas id="chart-spo2"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── TAB: Alerts ── -->
+    <div class="tab-content" id="tab-alerts">
+      <div class="section-title">Alert Log</div>
+      <div class="alerts-list" id="alerts-list"></div>
+    </div>
+
+  </div><!-- /main -->
+</div>
+
+<!-- Patient Detail Modal -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modal-name">Patient</h2>
+      <button class="btn-close" onclick="closeModalDirect()">✕</button>
+    </div>
+    <div id="modal-status-bar" class="modal-status normal">Status: Normal</div>
+    <div class="modal-vitals" id="modal-vitals"></div>
+    <p style="font-size:0.75rem;color:var(--text-muted);text-align:center;">
+      ML Classification: Decision Tree + Logistic Regression ensemble
+    </p>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════
+// DATA & STATE
+// ══════════════════════════════════
+const NORMAL_RANGES = {
+  hr:  [60, 100],
+  temp:[36.1, 37.5],
+  sys: [90, 140],
+  dia: [60, 90],
+  spo2:[95, 100],
+};
+
+const PATIENTS = [
+  { id:"PAT001", name:"Adeyemi, Chukwuemeka", age:54, ward:"Ward A", gender:"Male" },
+  { id:"PAT002", name:"Okafor, Ngozi",        age:38, ward:"Ward B", gender:"Female" },
+  { id:"PAT003", name:"Ibrahim, Musa",        age:67, ward:"ICU",    gender:"Male" },
+  { id:"PAT004", name:"Eze, Chidinma",        age:29, ward:"Ward C", gender:"Female" },
+  { id:"PAT005", name:"Balogun, Tunde",       age:72, ward:"ICU",    gender:"Male" },
+  { id:"PAT006", name:"Nwosu, Amaka",         age:45, ward:"Ward A", gender:"Female" },
+];
+
+// Simulated history: 10 readings per patient
+let patientHistory = {};
+let alerts = [];
+let charts = {};
+
+// ── Simulate realistic vitals ──
+function randBetween(a, b) { return +(a + Math.random() * (b - a)).toFixed(1); }
+
+function generateReading(patientId, forceAbnormal = false) {
+  if (forceAbnormal) {
+    // Deliberately abnormal
+    const scenarios = [
+      { hr: randBetween(115,140), temp: randBetween(38.2,39.5), sys: randBetween(155,180), dia: randBetween(95,110), spo2: randBetween(90,94) },
+      { hr: randBetween(38,52),   temp: randBetween(34.5,35.8), sys: randBetween(70,88),   dia: randBetween(42,58),  spo2: randBetween(85,93) },
+      { hr: randBetween(108,125), temp: randBetween(37.8,38.9), sys: randBetween(145,165), dia: randBetween(92,105), spo2: randBetween(91,94) },
+    ];
+    return scenarios[Math.floor(Math.random() * scenarios.length)];
+  }
+  return {
+    hr:   randBetween(62, 96),
+    temp: randBetween(36.2, 37.4),
+    sys:  randBetween(95, 135),
+    dia:  randBetween(62, 88),
+    spo2: randBetween(96, 99.5),
+  };
+}
+
+function classifyVitals(v) {
+  // ML simulation: Decision Tree + Logistic Regression ensemble
+  let abnormalCount = 0;
+  if (v.hr   < NORMAL_RANGES.hr[0]   || v.hr   > NORMAL_RANGES.hr[1])   abnormalCount++;
+  if (v.temp < NORMAL_RANGES.temp[0] || v.temp > NORMAL_RANGES.temp[1]) abnormalCount++;
+  if (v.sys  < NORMAL_RANGES.sys[0]  || v.sys  > NORMAL_RANGES.sys[1])  abnormalCount++;
+  if (v.dia  < NORMAL_RANGES.dia[0]  || v.dia  > NORMAL_RANGES.dia[1])  abnormalCount++;
+  if (v.spo2 < NORMAL_RANGES.spo2[0])                                    abnormalCount++;
+  return abnormalCount > 0 ? "Abnormal" : "Normal";
+}
+
+function isParamOk(key, val) {
+  const r = NORMAL_RANGES[key];
+  return val >= r[0] && val <= r[1];
+}
+
+function initHistory() {
+  PATIENTS.forEach((p, idx) => {
+    patientHistory[p.id] = [];
+    const forceAbnormal = idx === 2 || idx === 4; // PAT003 & PAT005 always abnormal (ICU)
+    for (let i = 9; i >= 0; i--) {
+      const v = generateReading(p.id, forceAbnormal && Math.random() > 0.4);
+      const status = classifyVitals(v);
+      const t = new Date(Date.now() - i * 30000);
+      patientHistory[p.id].push({
+        ...v,
+        status,
+        time: t.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit', second:'2-digit' })
+      });
+    }
+  });
+}
+
+function getLatest(patientId) {
+  const h = patientHistory[patientId];
+  return h[h.length - 1];
+}
+
+// ── Simulate new readings every 10s ──
+function tick() {
+  PATIENTS.forEach((p, idx) => {
+    const forceAbnormal = idx === 2 || idx === 4;
+    const v = generateReading(p.id, forceAbnormal && Math.random() > 0.35);
+    const status = classifyVitals(v);
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+    patientHistory[p.id].push({ ...v, status, time: timeStr });
+    if (patientHistory[p.id].length > 30) patientHistory[p.id].shift();
+
+    if (status === "Abnormal") {
+      alerts.unshift({
+        patient: p.name,
+        patientId: p.id,
+        time: now.toLocaleString('en-GB'),
+        vitals: v,
+        status: "Unacknowledged"
+      });
+      if (alerts.length > 30) alerts.pop();
+    }
+  });
+
+  renderOverview();
+  updateChartData();
+  renderAlerts();
+  updateBadge();
+}
+
+// ══════════════════════════════════
+// RENDER
+// ══════════════════════════════════
+function renderOverview() {
+  const grid = document.getElementById('patient-grid');
+  let normalCount = 0, abnormalCount = 0;
+
+  grid.innerHTML = PATIENTS.map(p => {
+    const v = getLatest(p.id);
+    const isAbnormal = v.status === "Abnormal";
+    if (isAbnormal) abnormalCount++; else normalCount++;
+
+    const hrOk   = isParamOk('hr', v.hr);
+    const tmpOk  = isParamOk('temp', v.temp);
+    const sysOk  = isParamOk('sys', v.sys);
+    const spo2Ok = isParamOk('spo2', v.spo2);
+
+    return `
+    <div class="patient-card ${isAbnormal ? 'abnormal' : ''}"
+         onclick="openModal('${p.id}')">
+      <div class="card-top">
+        <div>
+          <div class="patient-name">${p.name}</div>
+          <div class="patient-meta">${p.id} · ${p.age}y · ${p.ward}</div>
+        </div>
+        <span class="status-pill ${isAbnormal ? 'abnormal' : 'normal'}">
+          ${v.status}
+        </span>
+      </div>
+      <div class="vitals-grid">
+        <div class="vital-box">
+          <span class="vname">Heart Rate</span>
+          <span class="vval ${hrOk ? 'ok' : 'bad'}">${v.hr} <small>bpm</small></span>
+        </div>
+        <div class="vital-box">
+          <span class="vname">Temperature</span>
+          <span class="vval ${tmpOk ? 'ok' : 'bad'}">${v.temp}<small>°C</small></span>
+        </div>
+        <div class="vital-box">
+          <span class="vname">Blood Pressure</span>
+          <span class="vval ${sysOk ? 'ok' : 'bad'}">${v.sys}/<small>${v.dia}</small></span>
+        </div>
+        <div class="vital-box">
+          <span class="vname">SpO2</span>
+          <span class="vval ${spo2Ok ? 'ok' : 'bad'}">${v.spo2}<small>%</small></span>
+        </div>
+      </div>
+      <div class="card-time">Last updated: ${v.time}</div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('stat-normal').textContent   = normalCount;
+  document.getElementById('stat-abnormal').textContent = abnormalCount;
+  document.getElementById('stat-total').textContent    = PATIENTS.length;
+
+  const unacked = alerts.filter(a => a.status === 'Unacknowledged').length;
+  document.getElementById('stat-alerts').textContent   = unacked;
+
+  const banner = document.getElementById('alert-banner');
+  banner.style.display = abnormalCount > 0 ? 'block' : 'none';
+}
+
+// ── Charts ──
+function initCharts() {
+  const sel = document.getElementById('chart-patient-select');
+  sel.innerHTML = PATIENTS.map(p =>
+    `<option value="${p.id}">${p.name.split(',')[0]} (${p.id})</option>`
+  ).join('');
+
+  const mkChart = (id, label, color) => new Chart(document.getElementById(id), {
+    type: 'line',
+    data: { labels: [], datasets: [{ label, borderColor: color, backgroundColor: color+'22',
+      data: [], fill: true, tension: 0.4, pointRadius: 2, borderWidth: 2 }] },
+    options: { responsive: true, animation: false,
+      plugins: { legend: { display: false } },
+      scales: { x: { ticks: { font: { size: 9 }, maxTicksLimit: 6 } },
+                y: { ticks: { font: { size: 9 } } } } }
+  });
+
+  charts.hr   = mkChart('chart-hr',   'HR',   '#dc2626');
+  charts.temp = mkChart('chart-temp', 'Temp', '#d97706');
+  charts.bp   = mkChart('chart-bp',   'SBP',  '#1a56a0');
+  charts.spo2 = mkChart('chart-spo2', 'SpO2', '#16a34a');
+
+  renderCharts();
+}
+
+function renderCharts() {
+  const pid = document.getElementById('chart-patient-select').value;
+  const hist = patientHistory[pid] || [];
+
+  const labels = hist.map(h => h.time);
+  const update = (chart, key) => {
+    chart.data.labels = labels;
+    chart.data.datasets[0].data = hist.map(h => h[key]);
+    chart.update();
+  };
+  update(charts.hr,   'hr');
+  update(charts.temp, 'temp');
+  update(charts.bp,   'sys');
+  update(charts.spo2, 'spo2');
+}
+
+function updateChartData() {
+  const tab = document.getElementById('tab-monitoring');
+  if (tab.classList.contains('active')) renderCharts();
+}
+
+// ── Alerts ──
+function renderAlerts() {
+  const list = document.getElementById('alerts-list');
+  if (alerts.length === 0) {
+    list.innerHTML = '<div class="no-alerts">✅ No alerts recorded yet. All patients stable.</div>';
+    return;
+  }
+  list.innerHTML = alerts.slice(0, 20).map((a, i) => `
+    <div class="alert-item ${a.status === 'Acknowledged' ? 'acknowledged' : ''}">
+      <div class="alert-info">
+        <div class="alert-patient">⚠ ${a.patient}</div>
+        <div class="alert-detail">
+          ${a.time} &nbsp;·&nbsp;
+          HR: ${a.vitals.hr} bpm &nbsp;|&nbsp;
+          Temp: ${a.vitals.temp}°C &nbsp;|&nbsp;
+          BP: ${a.vitals.sys}/${a.vitals.dia} &nbsp;|&nbsp;
+          SpO2: ${a.vitals.spo2}%
+        </div>
+      </div>
+      ${a.status === 'Unacknowledged'
+        ? `<button class="btn-ack" onclick="ackAlert(${i})">Acknowledge</button>`
+        : `<span class="ack-label">Acknowledged</span>`}
+    </div>`).join('');
+}
+
+function ackAlert(i) {
+  alerts[i].status = 'Acknowledged';
+  renderAlerts();
+  updateBadge();
+  document.getElementById('stat-alerts').textContent =
+    alerts.filter(a => a.status === 'Unacknowledged').length;
+}
+
+function updateBadge() {
+  const unacked = alerts.filter(a => a.status === 'Unacknowledged').length;
+  const badge = document.getElementById('alert-count-badge');
+  badge.style.display = unacked > 0 ? 'inline' : 'none';
+  badge.textContent = `${unacked} Alert${unacked !== 1 ? 's' : ''}`;
+}
+
+// ── Modal ──
+function openModal(pid) {
+  const p = PATIENTS.find(x => x.id === pid);
+  const v = getLatest(pid);
+  const isAbnormal = v.status === "Abnormal";
+
+  document.getElementById('modal-name').textContent =
+    `${p.name} · ${p.id}`;
+  const bar = document.getElementById('modal-status-bar');
+  bar.className = `modal-status ${isAbnormal ? 'abnormal' : 'normal'}`;
+  bar.textContent = `ML Classification: ${v.status} ${isAbnormal ? '⚠' : '✓'}`;
+
+  const params = [
+    { key:'hr',   label:'Heart Rate',    val: v.hr,   unit:'bpm' },
+    { key:'temp', label:'Temperature',   val: v.temp, unit:'°C' },
+    { key:'sys',  label:'Systolic BP',   val: v.sys,  unit:'mmHg' },
+    { key:'dia',  label:'Diastolic BP',  val: v.dia,  unit:'mmHg' },
+    { key:'spo2', label:'SpO2',          val: v.spo2, unit:'%' },
+  ];
+
+  document.getElementById('modal-vitals').innerHTML = params.map(pm => {
+    const ok = isParamOk(pm.key, pm.val);
+    return `<div class="modal-vital-box">
+      <div class="mvname">${pm.label}</div>
+      <div class="mvval ${ok ? 'ok' : 'bad'}">${pm.val} <small style="font-size:0.55em">${pm.unit}</small></div>
+      <div style="font-size:0.65rem;margin-top:0.2rem;color:${ok?'var(--green)':'var(--red)'}">${ok?'Normal':'⚠ Abnormal'}</div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function closeModal(e) {
+  if (e.target === document.getElementById('modal-overlay')) closeModalDirect();
+}
+function closeModalDirect() {
+  document.getElementById('modal-overlay').classList.remove('open');
+}
+
+// ── Tabs ──
+function switchTab(name) {
+  document.querySelectorAll('.tab-btn').forEach((b,i) => {
+    b.classList.toggle('active', ['overview','monitoring','alerts'][i] === name);
+  });
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  if (name === 'monitoring') renderCharts();
+  if (name === 'alerts') renderAlerts();
+}
+
+// ── Clock ──
+function updateClock() {
+  document.getElementById('clock').textContent =
+    new Date().toLocaleTimeString('en-GB');
+}
+
+// ══════════════════════════════════
+// AUTH
+// ══════════════════════════════════
+function doLogin() {
+  const u = document.getElementById('login-user').value.trim();
+  const p = document.getElementById('login-pass').value.trim();
+  const err = document.getElementById('login-error');
+  if ((u === 'admin' && p === 'ipms2024') ||
+      (u === 'nurse' && p === 'nurse123')) {
+    err.style.display = 'none';
+    document.getElementById('login-page').style.display      = 'none';
+    document.getElementById('dashboard-page').style.display  = 'block';
+    startDashboard();
+  } else {
+    err.style.display = 'block';
+  }
+}
+
+function doLogout() {
+  document.getElementById('dashboard-page').style.display = 'none';
+  document.getElementById('login-page').style.display     = 'flex';
+  document.getElementById('login-user').value = '';
+  document.getElementById('login-pass').value = '';
+}
+
+// ── Allow Enter key on login ──
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' &&
+      document.getElementById('login-page').style.display !== 'none') {
+    doLogin();
+  }
+});
+
+// ══════════════════════════════════
+// INIT DASHBOARD
+// ══════════════════════════════════
+function startDashboard() {
+  initHistory();
+  renderOverview();
+  initCharts();
+  renderAlerts();
+  updateBadge();
+  updateClock();
+  setInterval(tick,        10000);   // Update vitals every 10s
+  setInterval(updateClock, 1000);    // Clock every 1s
+}
+</script>
+</body>
+</html>
